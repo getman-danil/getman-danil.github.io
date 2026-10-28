@@ -1,6 +1,6 @@
 // Offline mode: keeps a copy of the site on the phone.
 // Change VERSION after editing the site so phones pick up the new copy.
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE = 'resume-' + VERSION;
 const FONT_CSS = 'https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;600&family=Golos+Text:wght@400;500&family=JetBrains+Mono:wght@300;400&display=swap';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
@@ -33,6 +33,10 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   const req = event.request;
   if (req.method !== 'GET') return;
+  // This worker sits at the site root, so it also sees /training/, /learn/ and other sites in subfolders.
+  // Leave them alone: they are separate apps with their own offline copies.
+  const url = new URL(req.url);
+  if (url.origin === location.origin && /^\/[^/]+\//.test(url.pathname) && !url.pathname.startsWith('/icons/')) return;
 
   // The page itself: try the network first so edits show up, fall back to the saved copy offline.
   if (req.mode === 'navigate') {
